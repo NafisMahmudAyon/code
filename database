@@ -1,0 +1,65 @@
+create table if not exists code_profiles (
+  id int4 primary key,  -- Use Clerk's user_id as the primary key if preferred
+  user_id text not null,  -- Reference to the profiles table (or Clerk user id)
+  email text unique not null,
+  created_at timestamptz default now()
+);
+
+create table if not exists code_code_snippets (
+  id int4 primary key,
+  user_id int4 not null,  -- Reference to the profiles table (or Clerk user id)
+  title text not null,
+  description text,
+  language text not null,
+  tags text[] default '{}',  -- Array of tags (e.g., ['javascript','react'])
+  code text not null,
+  group_id int4,  -- Nullable; used if snippet belongs to a group
+  slug text unique,  -- Unique identifier for sharing short URLs
+  created_at timestamptz default now(),
+  updated_at timestamptz default now(),
+  foreign key (user_id) references code_profiles(id) on delete cascade
+);
+
+create table if not exists code_snippet_groups (
+  id int4 primary key,
+  user_id int4 not null,  -- Creator of the group
+  title text,            -- Optional group title
+  description text,      -- Optional description
+  created_at timestamptz default now(),
+  updated_at timestamptz default now(),
+  foreign key (user_id) references code_profiles(id) on delete cascade
+);
+
+create table if not exists code_votes (
+  id int4 primary key,
+  snippet_id int4 not null,
+  user_id int4 not null,
+  vote smallint not null check (vote in (-1, 1)),
+  created_at timestamptz default now(),
+  foreign key (snippet_id) references code_code_snippets(id) on delete cascade,
+  foreign key (user_id) references code_profiles(id) on delete cascade,
+  unique (snippet_id, user_id)  -- Ensure a user can vote only once per snippet
+);
+
+create table if not exists code_comments (
+  id int4 primary key,
+  snippet_id int4 not null,
+  user_id int4 not null,
+  parent_comment_id int4,  -- Nullable; used for replies
+  content text not null,
+  created_at timestamptz default now(),
+  updated_at timestamptz default now(),
+  foreign key (snippet_id) references code_code_snippets(id) on delete cascade,
+  foreign key (user_id) references code_profiles(id) on delete cascade,
+  foreign key (parent_comment_id) references code_comments(id) on delete cascade
+);
+
+create table if not exists code_bookmarks (
+  id int4 primary key,
+  snippet_id int4 not null,
+  user_id int4 not null,
+  created_at timestamptz default now(),
+  foreign key (snippet_id) references code_code_snippets(id) on delete cascade,
+  foreign key (user_id) references code_profiles(id) on delete cascade,
+  unique (snippet_id, user_id)  -- Prevent duplicate bookmarks by the same user
+);

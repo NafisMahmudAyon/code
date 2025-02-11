@@ -1,16 +1,16 @@
+import { CodeProvider } from "@/context/codeContext";
+import { ClerkProvider } from "@clerk/nextjs";
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Poppins } from "next/font/google";
 import "./globals.css";
+import PageLoader from "@/components/PageLoader";
+// import Notify from "@/components/Notify";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+const poppins = Poppins({
+  weight: ["100", "200", "300", "400", "500", "600", "700", "800", "900"],
   subsets: ["latin"],
 });
 
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
 
 export const metadata: Metadata = {
   title: "Create Next App",
@@ -22,13 +22,22 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  
   return (
-    <html lang="en">
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
-      >
-        {children}
-      </body>
-    </html>
+    <ClerkProvider>
+        <html lang="en">
+          <body
+            className={`${poppins.className} antialiased bg-primary-100 dark:bg-primary-600 text-primary-900 dark:text-primary-100`}
+            >
+            <CodeProvider>
+            <PageLoader />
+            <div className="w-full max-w-[1920px] mx-auto">
+              {children}
+            </div>
+            {/* <Notify /> */}
+      </CodeProvider>
+          </body>
+        </html>
+    </ClerkProvider>
   );
 }
