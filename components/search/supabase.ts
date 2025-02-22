@@ -38,24 +38,28 @@ export async function searchSnippets({
 		query = query.contains("tags", tags);
 	}
 
-	// Apply sorting
+	// Get vote counts first if sorting by votes
+	let voteCountMap = new Map();
 	if (sort === "votes") {
-		query = query.order("vote_count", { ascending: false });
+		const { data: voteCounts, error: voteError } = await supabase.rpc('get_snippet_votes');
+		if (voteError) {
+			console.error("Error fetching vote counts:", voteError);
+			throw voteError;
+		}
+		voteCountMap = new Map(voteCounts?.map(v => [v.snippet_id, v.upvotes - v.downvotes]) || []);
 	} else {
 		query = query.order("created_at", { ascending: false });
 	}
 
-	// Apply pagination
-	query = query.range(offset, offset + limit - 1);
+	// Get all snippets with their total count
+	const { data: allSnippets, count: totalCount, error: snippetsError } = await query;
 
-	const { data, count, error } = await query;
-
-	if (error) {
-		console.error("Supabase query error:", error);
-		throw error;
+	if (snippetsError) {
+		console.error("Error fetching snippets:", snippetsError);
+		throw snippetsError;
 	}
 
-	if (!data) {
+	if (!allSnippets) {
 		return {
 			snippets: [],
 			total: 0,
@@ -63,7 +67,20 @@ export async function searchSnippets({
 		};
 	}
 
-	const snippets = data.map((snippet) => ({
+	// Sort by votes if needed
+	let sortedSnippets = allSnippets;
+	if (sort === "votes") {
+		sortedSnippets = allSnippets.sort((a, b) => {
+			const voteCountA = voteCountMap.get(a.id) || 0;
+			const voteCountB = voteCountMap.get(b.id) || 0;
+			return voteCountB - voteCountA;
+		});
+	}
+
+	// Apply pagination after sorting
+	const paginatedData = sortedSnippets.slice(offset, offset + limit);
+
+	const snippets = paginatedData.map((snippet) => ({
 		...snippet,
 		vote_count:
 			snippet.code_votes?.reduce((acc, vote) => acc + vote.vote, 0) || 0,
@@ -75,7 +92,7 @@ export async function searchSnippets({
 
 	return {
 		snippets,
-		total: count || 0,
-		hasMore: offset + limit < (count || 0),
+		total: totalCount || 0,
+		hasMore: offset + limit < (totalCount || 0),
 	};
 }
