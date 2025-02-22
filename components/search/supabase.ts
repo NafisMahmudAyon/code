@@ -1,6 +1,6 @@
 "use client";
 import { supabase } from "@/hooks/supabaseClient";
-import { SearchParams, SearchResponse } from "../../app/search/Types";
+import { SearchParams, SearchResponse } from "./Types";
 
 export async function searchSnippets({
 	q = "",
@@ -30,7 +30,7 @@ export async function searchSnippets({
 
 	// Apply language filter
 	if (lang) {
-		query = query.eq("language", lang);
+		query = query.ilike("language", `%${lang}%`);
 	}
 
 	// Apply tags filter
