@@ -3,6 +3,7 @@
 import { ArrowRight } from "lucide-react";
 import { DashboardSnippetCard } from "@/app/dashboard/page";
 import { useCode } from "@/context/codeContext";
+import Link from "next/link";
 
 export function FeaturedSnippets() {
   const { globalLatestSnippets, globalUpVote } = useCode();
@@ -25,13 +26,13 @@ export function FeaturedSnippets() {
         </div>
 
         <div className="text-center">
-          <a
+          <Link
             href="/search"
             className="inline-flex items-center gap-2 px-6 py-3 bg-primary-900 text-white rounded-lg hover:bg-primary-800 transition-colors"
           >
             Show More Snippets
             <ArrowRight className="w-5 h-5" />
-          </a>
+          </Link>
         </div>
       </div>
     </div>

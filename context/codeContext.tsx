@@ -403,7 +403,7 @@ export const CodeProvider = ({ children }: { children: React.ReactNode }) => {
 					downvote: profile ? userVote?.vote === -1 : false, // If unknown user, false
 				};
 			});
-
+console.log(snippetsWithVotes)
 			setGlobalLatestSnippets(snippetsWithVotes);
 		} catch (error) {
 			console.error('Error fetching latest snippets:', error);
