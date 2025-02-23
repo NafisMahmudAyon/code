@@ -10,8 +10,9 @@ import { Typography } from 'aspect-ui/Typography'
 import { Dropdown, DropdownAction, DropdownContent, DropdownItem, DropdownList } from 'aspect-ui/Dropdown'
 import { SnippetsWithVotes, useCode } from '@/context/codeContext'
 import { supabase } from '@/hooks/supabaseClient'
-import { Bookmark, Votes, Link as LinkIcon, Comments } from './Icons'
+import { Bookmark, Votes, Link as LinkIcon, Comments as CommentsIcon } from './Icons'
 import formatDate from './dateFormat'
+import Comments from './Comments'
 
 // Types
 interface User {
@@ -96,7 +97,6 @@ const CodeViewer = ({ slug }: { slug: string }) => {
       console.error("Error fetching user:", error)
     }
   }, [])
-
   const fetchSnippetData = useCallback(async () => {
     try {
       // Fetch snippet details
@@ -127,10 +127,18 @@ const CodeViewer = ({ slug }: { slug: string }) => {
 
       if (votesError) throw votesError
 
+      // Fetch comment count
+      const { count: commentCount, error: commentError } = await supabase
+        .from('code_comments')
+        .select('id', { count: 'exact' })
+        .eq('snippet_id', snippet.id)
+
+      if (commentError) throw commentError
+
       const upvotes = votesData.filter(vote => vote.vote === 1).length
       const downvotes = votesData.filter(vote => vote.vote === -1).length
 
-      setSnippet({ ...snippet, upvotes, downvotes })
+      setSnippet({ ...snippet, upvotes, downvotes, comment_count: commentCount })
     } catch (error) {
       console.error('Error fetching snippet data:', error)
     }
@@ -256,15 +264,14 @@ const CodeViewer = ({ slug }: { slug: string }) => {
           {/* Comments */}
           <div className='inline-flex items-center group'>
             <span className='p-1'>
-              <Link href={`/code/${snippet.slug}`}>
-                <Comments className='group-hover:bg-cyan-600 rounded-lg group-hover:text-cyan-300 transition-colors duration-150' />
+              <Link href={`/code/${snippet.slug}#comments`}>
+                <CommentsIcon className='group-hover:bg-cyan-600 rounded-lg group-hover:text-cyan-300 transition-colors duration-150' />
               </Link>
             </span>
             <span className='ml-1 group-hover:text-cyan-600 transition-colors duration-150 select-none'>
-              10
+              {snippet.comment_count || 0}
             </span>
           </div>
-
           {/* Bookmark */}
           <div className='inline-flex items-center group'>
             <span className='p-1'>
@@ -278,6 +285,11 @@ const CodeViewer = ({ slug }: { slug: string }) => {
               <LinkIcon className='group-hover:bg-sky-600 rounded-lg group-hover:text-sky-300 transition-colors duration-150' />
             </span>
           </div>
+        </div>
+
+        {/* Comments Section */}
+        <div className='mt-8'>
+          <Comments snippetSlug={slug} />
         </div>
       </div>
     </div>

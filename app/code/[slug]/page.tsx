@@ -3,13 +3,11 @@ import CodeViewer from "@/components/CodeViewer";
 export default async function Page({
   params,
 }: {
-  params: Promise<{ slug: string }>
+  params: { slug: string }
 }) {
-  const slug = (await params).slug;
-
-
+  const slug = params.slug;
   return (
-    <div className="flex w-full h-screen bg-primary-600">
+    <div className="w-full h-screen">
       <CodeViewer slug={slug} />
     </div>
   );

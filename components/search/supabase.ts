@@ -9,7 +9,7 @@ export async function searchSnippets({
 	tags = [],
 	page = 1,
 }: SearchParams): Promise<SearchResponse> {
-	const limit = 4; // Number of items per page
+	const limit = 4;
 	const offset = (page - 1) * limit;
 
 	let query = supabase.from("code_code_snippets").select(
@@ -23,35 +23,44 @@ export async function searchSnippets({
 		{ count: "exact" }
 	);
 
-	// Apply search filter
 	if (q) {
 		query = query.or(`title.ilike.%${q}%,description.ilike.%${q}%`);
 	}
 
-	// Apply language filter
 	if (lang) {
 		query = query.ilike("language", `%${lang}%`);
 	}
 
-	// Apply tags filter
 	if (tags.length > 0) {
 		query = query.contains("tags", tags);
 	}
 
-	// Get vote counts first if sorting by votes
-	let voteCountMap = new Map();
+	type VoteCount = { snippet_id: number; upvotes: number; downvotes: number };
+	type CodeSnippet = {
+		id: number;
+		title: string;
+		description: string;
+		code: string;
+		language: string;
+		tags: string[];
+		code_votes: { vote: number }[];
+		code_profiles: { email: string };
+		created_at: string;
+	};
+
+	let voteCountMap = new Map<number, number>();
 	if (sort === "votes") {
 		const { data: voteCounts, error: voteError } = await supabase.rpc('get_snippet_votes');
 		if (voteError) {
 			console.error("Error fetching vote counts:", voteError);
 			throw voteError;
 		}
-		voteCountMap = new Map(voteCounts?.map(v => [v.snippet_id, v.upvotes - v.downvotes]) || []);
+		console.log(voteCounts)
+		voteCountMap = new Map((voteCounts as VoteCount[])?.map(v => [v.snippet_id, v.upvotes - v.downvotes]) || []);
 	} else {
 		query = query.order("created_at", { ascending: false });
 	}
 
-	// Get all snippets with their total count
 	const { data: allSnippets, count: totalCount, error: snippetsError } = await query;
 
 	if (snippetsError) {
@@ -67,17 +76,16 @@ export async function searchSnippets({
 		};
 	}
 
-	// Sort by votes if needed
-	let sortedSnippets = allSnippets;
+	const typedSnippets = allSnippets as CodeSnippet[];
+	let sortedSnippets = typedSnippets;
 	if (sort === "votes") {
-		sortedSnippets = allSnippets.sort((a, b) => {
+		sortedSnippets = typedSnippets.sort((a, b) => {
 			const voteCountA = voteCountMap.get(a.id) || 0;
 			const voteCountB = voteCountMap.get(b.id) || 0;
 			return voteCountB - voteCountA;
 		});
 	}
 
-	// Apply pagination after sorting
 	const paginatedData = sortedSnippets.slice(offset, offset + limit);
 
 	const snippets = paginatedData.map((snippet) => ({
@@ -85,8 +93,8 @@ export async function searchSnippets({
 		vote_count:
 			snippet.code_votes?.reduce((acc, vote) => acc + vote.vote, 0) || 0,
 		author: {
-			name: snippet.code_profiles.email.split("@")[0], // Use email as name
-			avatar_url: `https://api.dicebear.com/7.x/initials/svg?seed=${snippet.code_profiles.email}`, // Generate avatar from email
+			name: snippet.code_profiles.email.split("@")[0],
+			avatar_url: `https://api.dicebear.com/7.x/initials/svg?seed=${snippet.code_profiles.email}`,
 		},
 	}));
 

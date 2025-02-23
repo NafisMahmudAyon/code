@@ -33,6 +33,7 @@ export interface SnippetsWithVotes extends Snippets {
 	downvotes: number;
 	upvote?: boolean;
 	downvote?: boolean;
+	comment_count?: number;
 }
 
 interface CodeContextType {
