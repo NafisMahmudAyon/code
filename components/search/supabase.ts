@@ -46,22 +46,36 @@ export async function searchSnippets({
 		code_votes: { vote: number }[];
 		code_profiles: { email: string };
 		created_at: string;
+		updated_at: string;
+		slug: string;
+		user_id: string;
 	};
 
 	let voteCountMap = new Map<number, number>();
 	if (sort === "votes") {
-		const { data: voteCounts, error: voteError } = await supabase.rpc('get_snippet_votes');
+		const { data: voteCounts, error: voteError } = await supabase.rpc(
+			"get_snippet_votes"
+		);
 		if (voteError) {
 			console.error("Error fetching vote counts:", voteError);
 			throw voteError;
 		}
-		console.log(voteCounts)
-		voteCountMap = new Map((voteCounts as VoteCount[])?.map(v => [v.snippet_id, v.upvotes - v.downvotes]) || []);
+		console.log(voteCounts);
+		voteCountMap = new Map(
+			(voteCounts as VoteCount[])?.map((v) => [
+				v.snippet_id,
+				v.upvotes - v.downvotes,
+			]) || []
+		);
 	} else {
 		query = query.order("created_at", { ascending: false });
 	}
 
-	const { data: allSnippets, count: totalCount, error: snippetsError } = await query;
+	const {
+		data: allSnippets,
+		count: totalCount,
+		error: snippetsError,
+	} = await query;
 
 	if (snippetsError) {
 		console.error("Error fetching snippets:", snippetsError);
@@ -96,6 +110,9 @@ export async function searchSnippets({
 			name: snippet.code_profiles.email.split("@")[0],
 			avatar_url: `https://api.dicebear.com/7.x/initials/svg?seed=${snippet.code_profiles.email}`,
 		},
+		user_id: Number(snippet.user_id),
+		slug: snippet.slug.toString(),
+		updated_at: snippet.updated_at,
 	}));
 
 	return {
@@ -104,3 +121,4 @@ export async function searchSnippets({
 		hasMore: offset + limit < (totalCount || 0),
 	};
 }
+

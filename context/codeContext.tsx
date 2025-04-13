@@ -491,7 +491,7 @@ console.log(snippetsWithVotes)
 		} catch (error) {
 			console.error("Error updating vote:", error);
 		}
-	}, [profile, fetchGlobalLatestSnippets]);
+	}, [profile, fetchGlobalLatestSnippets, addToast]);
 
 	const contextValue: CodeContextType = {
 		snippets,

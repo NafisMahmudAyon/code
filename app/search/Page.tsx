@@ -31,7 +31,7 @@ export default function SearchPage() {
       setQuery(searchQuery);
       performSearch(searchQuery, selectedTags, sortBy, selectedLanguage);
     }
-  }, [searchParams]);
+  }, [searchParams, selectedTags, sortBy, selectedLanguage]);
 
   const performSearch = async (searchQuery: string, tags: string[], sort: 'votes' | 'newest', lang: string) => {
     setLoading(true);

@@ -9,7 +9,7 @@ export interface CodeSnippet {
   slug: string;
   created_at: string;
   updated_at: string;
-  vote_count: number;
+  vote_count?: number;
   author: {
     name: string;
     avatar_url: string;

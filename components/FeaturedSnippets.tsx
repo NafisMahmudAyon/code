@@ -1,9 +1,10 @@
 'use client'
 
 import { ArrowRight } from "lucide-react";
-import { DashboardSnippetCard } from "@/app/dashboard/page";
+
 import { useCode } from "@/context/codeContext";
 import Link from "next/link";
+import { DashboardSnippetCard } from "./DashboardSnippetCard";
 
 export function FeaturedSnippets() {
   const { globalLatestSnippets, globalUpVote } = useCode();

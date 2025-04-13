@@ -1,7 +1,7 @@
-interface DateFormatOptions {
-	locale?: string;
-	timeZone?: string;
-}
+// interface DateFormatOptions {
+// 	locale?: string;
+// 	timeZone?: string;
+// }
 
 type FormatToken =
 	| "YYYY"
@@ -40,7 +40,7 @@ type FormatToken =
 function formatDate(
 	dateString: string,
 	format: string,
-	options: DateFormatOptions = {}
+	// options?: DateFormatOptions = {}
 ): string {
 	const date = new Date(dateString);
 

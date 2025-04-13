@@ -3,7 +3,8 @@
 import { supabase } from "@/hooks/supabaseClient";
 import { useUser } from "@clerk/nextjs";
 import { useToast } from "aspect-ui/Toast";
-import { memo, useCallback, useEffect, useState } from "react";
+import Image from "next/image";
+import { useCallback, useEffect, useState } from "react";
 
 interface Comment {
   id: number;
@@ -13,7 +14,7 @@ interface Comment {
   content: string;
   created_at: string;
   updated_at: string;
-  author?: {
+  code_profiles?: {
     email: string;
   };
   replies?: Comment[];
@@ -32,13 +33,34 @@ export default function Comments({ snippetSlug }: CommentsProps) {
   const { user } = useUser();
   const { addToast } = useToast();
 
-  const fetchComments = async () => {
+
+
+
+  useEffect(() => {
+    const fetchSnippetId = async () => {
+      const { data: snippet, error } = await supabase
+        .from("code_code_snippets")
+        .select("id")
+        .eq("slug", snippetSlug)
+        .single();
+
+      if (error) {
+        console.error("Error fetching snippet:", error);
+        return;
+      }
+
+      setSnippetId(snippet.id);
+    };
+    fetchSnippetId();
+  }, [snippetSlug]);
+
+  const fetchComments = useCallback( async () => {
     const { data: commentsData, error } = await supabase
       .from("code_comments")
       .select(`
-        *,
-        code_profiles (email)
-      `)
+    *,
+    code_profiles (email)
+  `)
       .eq("snippet_id", snippetId)
       .order("created_at", { ascending: true });
 
@@ -60,32 +82,12 @@ export default function Comments({ snippetSlug }: CommentsProps) {
     }, []);
 
     setComments(threadedComments);
-  };
-
-  const fetchSnippetId = async () => {
-    const { data: snippet, error } = await supabase
-      .from("code_code_snippets")
-      .select("id")
-      .eq("slug", snippetSlug)
-      .single();
-
-    if (error) {
-      console.error("Error fetching snippet:", error);
-      return;
-    }
-
-    setSnippetId(snippet.id);
-  };
-
-  useEffect(() => {
-    fetchSnippetId();
-  }, [snippetSlug]);
-
+  }, [snippetId]);
   useEffect(() => {
     if (snippetId) {
       fetchComments();
     }
-  }, [snippetId]);
+  }, [snippetId, fetchComments]);
 
   const handleSubmitComment = async (parentId: number | null = null, content?: string) => {
     const commentContent = content || newComment;
@@ -158,13 +160,15 @@ export default function Comments({ snippetSlug }: CommentsProps) {
         <div className="bg-white dark:bg-gray-800 rounded-lg p-4 shadow">
           <div className="flex items-center justify-between mb-2">
             <div className="flex items-center space-x-2">
-              <img
-                src={`https://api.dicebear.com/7.x/initials/svg?seed=${comment.author?.email}`}
+              <Image
+                src={`https://api.dicebear.com/7.x/initials/svg?seed=${comment.code_profiles?.email??"unknown@gmail.com"}`}
                 alt="avatar"
+                width={32}
+                height={32}
                 className="w-8 h-8 rounded-full"
               />
               <span className="font-medium text-gray-900 dark:text-gray-100">
-                {comment.author?.email.split("@")[0]}
+                {comment.code_profiles?.email.split("@")[0]}
               </span>
             </div>
             <span className="text-sm text-gray-500">
