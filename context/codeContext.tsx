@@ -217,7 +217,7 @@ export const CodeProvider = ({ children }: { children: React.ReactNode }) => {
 			if (userVotesResponse.error) throw userVotesResponse.error;
 
 			const snippetsWithVotes = snippetsResponse.data.map(snippet => {
-				const voteData = votesResponse.data?.find(v => v.snippet_id === snippet.id) || {
+				const voteData = votesResponse.data?.find((v: { snippet_id: number; upvotes: number; downvotes: number }) => v.snippet_id === snippet.id) || {
 					upvotes: 0,
 					downvotes: 0,
 				};
@@ -387,7 +387,7 @@ export const CodeProvider = ({ children }: { children: React.ReactNode }) => {
 			if (userVotesResponse.error) throw userVotesResponse.error;
 
 			const snippetsWithVotes = snippetsResponse.data.map(snippet => {
-				const voteData = votesResponse.data?.find(v => v.snippet_id === snippet.id) || {
+				const voteData = votesResponse.data?.find((v: { snippet_id: number; upvotes: number; downvotes: number }) => v.snippet_id === snippet.id) || {
 					upvotes: 0,
 					downvotes: 0,
 				};

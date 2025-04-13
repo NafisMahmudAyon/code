@@ -29,3 +29,8 @@ export interface SearchResponse {
   total: number;
   hasMore: boolean;
 }
+
+export interface Votes {
+  snippet_id: number;
+  vote: number;
+}
